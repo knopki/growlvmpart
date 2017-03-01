@@ -6,10 +6,12 @@ Working only with one scenario: you need to grow FS if free space less then barr
 Not well tested. May be buggy.
 
 ## Requirements
-* python 2.7
-* growpart
+* python2
+* lvm2
+* cloud-utils-growpart
 * parted
-* lvm utils
+* util-linux
+* your FS utils
 
 ## Usage
 

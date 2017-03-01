@@ -100,6 +100,6 @@ setup(
 
     options={'bdist_rpm': {
         'group': 'System Environment/Base',
-        'requires': "python lvm2 cloud-utils-growpart parted util-linux xfsprogs e2fsprogs"
+        'requires': "python lvm2 cloud-utils-growpart parted util-linux"
     }},
 )
