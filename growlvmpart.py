@@ -1,17 +1,14 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 """
-growlvpart.py <mountpoint> <min free> <max free>
-Only for LVM partitions
+LVM partition resizer
 """
 
+import argparse
 import json
 import os
 import subprocess
 import sys
-
-def usage():
-    print "growfs.py <mountpoint> <min free> <max free>"
 
 def convert_units(str):
     """ Convert some string with binary prefix to int bytes"""
@@ -28,6 +25,38 @@ def convert_units(str):
         "t": 2**40,
         "tb": 2**40
     }.get(unit, 1)
+
+def get_arguments():
+    """ Parse arguments """
+    parser = argparse.ArgumentParser(
+        description="""
+          Quick and dirty python script to automatically detecting disk resize, expand lvm partitions and fs
+        """
+    )
+    parser.add_argument('--mountpoint', '--path', required=True, help='target mountpoint')
+    parser.add_argument('--min', required=True, help='minimum free space')
+    parser.add_argument('--max', help='maximum free space')
+    args = parser.parse_args()
+
+    # is path exits
+    if not os.path.isdir:
+        print "path not exists!"
+        parser.print_help()
+        sys.exit(1)
+
+    # normalize values
+    if not args.max:
+        args.max = args.min
+    try:
+        args.min = convert_units(args.min)
+        args.max = convert_units(args.max)
+        if args.max > args.min:
+            args.max = args.min
+    except ValueError:
+        parser.print_help()
+        sys.exit(1)
+
+    return args.mountpoint, args.min, args.max
 
 def disk_usage(path):
     """Return disk usage associated with path."""
@@ -72,7 +101,8 @@ def vg_info(name):
     try:
         vgs = json.loads(
             subprocess.check_output(
-                ["vgs", "--reportformat=json", "-o", "vg_name,vg_size,vg_free,pv_name", "--units=b", name]
+                ["vgs", "--reportformat=json", "-o",
+                 "vg_name,vg_size,vg_free,pv_name", "--units=b", name]
             ))
     except:
         return None
@@ -184,14 +214,13 @@ def lvresize(dev, size):
     """ Extend LV with FS """
     subprocess.check_output(["lvresize", "-r", "--size", str(size)+"b", dev])
 
-def main(mountpoint, min, max):
+def main():
+    """ Entry point """
+    # parse args
+    mountpoint, min, max = get_arguments()
+
+    # get partition info
     part = disk_partition(mountpoint)
-    try:
-        min = convert_units(min)
-        max = convert_units(max)
-    except ValueError:
-        usage()
-        sys.exit(1)
 
     # resize not needed -> exit
     if part['usage']['free'] >= min:
@@ -221,14 +250,5 @@ def main(mountpoint, min, max):
     lvresize(part['lv']['path'], new_size)
 
 
-
 if __name__ == "__main__":
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        usage()
-        sys.exit(1)
-
-    try:
-        main(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]))
-    except IndexError:
-        main(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[2]))
-
+    main()
