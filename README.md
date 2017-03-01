@@ -14,11 +14,11 @@ Not well tested. May be buggy.
 ## Usage
 
 ```
-./growlvmpart.py <mount point> <minimal free space> <maximum free space>
+./growlvmpart.py --path <mount point> --min <minimal free space> [--max <maximum free space>]
 ```
 For example:
 ```
-./growlvmpart.py /var/lib/docker 1500m 4g
+./growlvmpart.py --path /var/lib/docker --min 1500m --max 4g
 ```
 Size in bytes. You can use some units [bkmgt].
 
