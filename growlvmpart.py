@@ -54,7 +54,7 @@ def get_arguments():
     try:
         args.min = convert_units(args.min)
         args.max = convert_units(args.max)
-        if args.max > args.min:
+        if args.max < args.min:
             args.max = args.min
     except ValueError:
         parser.print_help()
