@@ -10,6 +10,10 @@ import os
 import subprocess
 import sys
 
+# patch env
+MY_ENV = os.environ.copy()
+MY_ENV["PATH"] = "/usr/sbin:/sbin:" + MY_ENV["PATH"]
+
 def convert_units(str):
     """ Convert some string with binary prefix to int bytes"""
     unit = ''.join(ele for ele in str if not ele.isdigit()).strip().lower()
@@ -84,8 +88,9 @@ def lv_info(dev):
     try:
         lvs = json.loads(
             subprocess.check_output(
-                ["lvs", "--reportformat=json", "-o", "lv_name,lv_size,vg_name,lv_path", "--units=b", dev]
-            ))
+                ["lvs", "--reportformat=json", "-o", "lv_name,lv_size,vg_name,lv_path",
+                 "--units=b", dev],
+                env=MY_ENV))
     except:
         return None
     lv = lvs['report'][0]['lv'][0]
@@ -102,8 +107,8 @@ def vg_info(name):
         vgs = json.loads(
             subprocess.check_output(
                 ["vgs", "--reportformat=json", "-o",
-                 "vg_name,vg_size,vg_free,pv_name", "--units=b", name]
-            ))
+                 "vg_name,vg_size,vg_free,pv_name", "--units=b", name],
+                env=MY_ENV))
     except:
         return None
     vg = vgs['report'][0]['vg'][0]
@@ -119,8 +124,8 @@ def pv_info(name):
     try:
         pvs = json.loads(
             subprocess.check_output(
-                ["pvs", "--reportformat=json", "-o", "pv_name,pv_size,pv_free", "--units=b", name]
-            ))
+                ["pvs", "--reportformat=json", "-o", "pv_name,pv_size,pv_free", "--units=b", name],
+                env=MY_ENV))
     except:
         return None
     pv = pvs['report'][0]['pv'][0]
@@ -169,14 +174,18 @@ def disk_partition(mountpoint):
 
     # get LV info
     part['lv'] = lv_info(device)
-    if not part['lv']:
+    if 'lv' not in part:
         return part
 
     # get VG info
     part['vg'] = vg_info(part['lv']['vg_name'])
+    if 'vg' not in part:
+        return part
 
     # get PV info
     part['pv'] = pv_info(part['vg']['pv_name'])
+    if 'pv' not in part:
+        return part
 
     return part
 
@@ -198,7 +207,7 @@ def growpart(dev):
     disk = dev[0:-1]
     partnum = dev[-1]
     try:
-        subprocess.check_output(["growpart", "-u", "auto", disk, partnum])
+        subprocess.check_output(["growpart", "-u", "auto", disk, partnum], env=MY_ENV)
     except subprocess.CalledProcessError as e:
         if e.returncode == 1:
             pass
@@ -208,11 +217,11 @@ def growpart(dev):
 
 def pvresize(dev):
     """Extend PV"""
-    subprocess.check_output(["pvresize", dev])
+    subprocess.check_output(["pvresize", dev], env=MY_ENV)
 
 def lvresize(dev, size):
     """ Extend LV with FS """
-    subprocess.check_output(["lvresize", "-r", "--size", str(size)+"b", dev])
+    subprocess.check_output(["lvresize", "-r", "--size", str(size)+"b", dev], env=MY_ENV)
 
 def main():
     """ Entry point """
@@ -221,6 +230,11 @@ def main():
 
     # get partition info
     part = disk_partition(mountpoint)
+
+    # if not lvm
+    if 'lv' not in part or 'vg' not in part or 'pv' not in part:
+        print "Not LVM partition?"
+        sys.exit(1)
 
     # resize not needed -> exit
     if part['usage']['free'] >= min:
@@ -237,6 +251,11 @@ def main():
 
     # refresh part info
     part = disk_partition(mountpoint)
+
+    # if not lvm (strange!)
+    if 'lv' not in part or 'vg' not in part or 'pv' not in part:
+        print "Not LVM partition?"
+        sys.exit(1)
 
     # determine new size of lv
     new_size = part['usage']['used'] + max

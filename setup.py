@@ -1,4 +1,7 @@
-"""Quick and dirty python script to automatically detecting disk resize, expand lvm partitions and fs Edit"""
+"""
+Quick and dirty python script to automatically detecting disk resize,
+expand lvm partitions and fs Edit
+"""
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
@@ -18,7 +21,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.2',
+    version='0.0.3',
 
     description='Quick and dirty python script to automatically detecting disk resize, expand lvm partitions and fs Edit',
     long_description=long_description,
