@@ -8,7 +8,6 @@ Not well tested. May be buggy.
 ## Requirements
 * python2
 * lvm2
-* cloud-utils-growpart
 * parted
 * util-linux
 * your FS utils

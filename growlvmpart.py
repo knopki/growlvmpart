@@ -207,7 +207,7 @@ def growpart(dev):
     disk = dev[0:-1]
     partnum = dev[-1]
     try:
-        subprocess.check_output(["growpart", "-u", "auto", disk, partnum], env=MY_ENV)
+        subprocess.check_output(["parted", "-s", disk, "resizepart", partnum, "100%"], env=MY_ENV)
     except subprocess.CalledProcessError as e:
         if e.returncode == 1:
             pass
