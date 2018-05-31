@@ -25,7 +25,7 @@ Size in bytes. You can use some units [bkmgt].
 
 ## Algorithm
 1. Exit if free space on FS greater then ```<minimum free space>```
-2. Rescan schi devices and hosts
+2. Rescan SCSI devices and hosts
 3. Resize underlying partition
 4. Resize PV
 5. Resize LV and FS to size ```<used space> + <maximum free space>```
